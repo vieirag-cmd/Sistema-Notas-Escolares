@@ -8,6 +8,7 @@ using namespace std;
 
 struct Aluno {
   string nome;
+  a;
   string matricula;
   string turma;
 };
