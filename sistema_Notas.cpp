@@ -66,3 +66,140 @@ void imprimirCentralizado(const string &texto, int largura = 50)
     espacos = 0;
   cout << string(espacos, ' ') << texto << "\n";
 }
+#include <vector>
+#include <fstream>
+#include <iomanip>
+
+struct Aluno
+{
+  string nome;
+  string matricula;
+  string turma;
+};
+
+struct Disciplina
+{
+  string nome;
+  string codigo;
+};
+
+const int MAX_ALUNOS = 100;
+const int MAX_DISCIPLINAS = 20;
+
+// Cadastrar aluno e salvar no arquivo
+void cadastrarAluno(vector<Aluno> &alunos, const string &arquivo)
+{
+  limparTela();
+  imprimirCentralizado("Cadastro de Aluno");
+
+  Aluno novoAluno;
+  novoAluno.nome = validarEntradaString("Nome do aluno: ");
+  novoAluno.matricula = validarEntradaString("Matrícula do aluno: ");
+  novoAluno.turma = validarEntradaString("Turma do aluno: ");
+
+  alunos.push_back(novoAluno);
+
+  ofstream outFile(arquivo, ios::app);
+  if (outFile.is_open())
+  {
+    outFile << novoAluno.nome << ";" << novoAluno.matricula << ";" << novoAluno.turma << "\n";
+    cout << "\nAluno cadastrado com sucesso!\n";
+    outFile.close();
+  }
+  else
+  {
+    cout << "\nErro ao abrir arquivo " << arquivo << "\n";
+  }
+  cout << "Pressione ENTER para continuar...";
+  cin.ignore();
+}
+
+// Cadastrar disciplina e salvar no arquivo
+void cadastrarDisciplina(vector<Disciplina> &disciplinas, const string &arquivo)
+{
+  limparTela();
+  imprimirCentralizado("Cadastro de Disciplina");
+
+  Disciplina novaDisciplina;
+  novaDisciplina.nome = validarEntradaString("Nome da disciplina: ");
+  novaDisciplina.codigo = validarEntradaString("Código da disciplina: ");
+
+  disciplinas.push_back(novaDisciplina);
+
+  ofstream outFile(arquivo, ios::app);
+  if (outFile.is_open())
+  {
+    outFile << novaDisciplina.nome << ";" << novaDisciplina.codigo << "\n";
+    cout << "\nDisciplina cadastrada com sucesso!\n";
+    outFile.close();
+  }
+  else
+  {
+    cout << "\nErro ao abrir arquivo " << arquivo << "\n";
+  }
+  cout << "Pressione ENTER para continuar...";
+  cin.ignore();
+}
+
+// Carregar dados dos arquivos para os vetores e matriz de notas
+void carregarDados(const string &arquivoAlunos, const string &arquivoDisciplinas,
+                   const string &arquivoNotas, vector<Aluno> &alunos,
+                   vector<Disciplina> &disciplinas, double notas[][MAX_DISCIPLINAS])
+{
+
+  alunos.clear();
+  disciplinas.clear();
+
+  ifstream inAlunos(arquivoAlunos);
+  string linha;
+  while (getline(inAlunos, linha))
+  {
+    Aluno aluno;
+    size_t pos = linha.find(";");
+    aluno.nome = linha.substr(0, pos);
+    linha.erase(0, pos + 1);
+
+    pos = linha.find(";");
+    aluno.matricula = linha.substr(0, pos);
+    aluno.turma = linha.substr(pos + 1);
+
+    alunos.push_back(aluno);
+  }
+  inAlunos.close();
+
+  ifstream inDisciplinas(arquivoDisciplinas);
+  while (getline(inDisciplinas, linha))
+  {
+    Disciplina disciplina;
+    size_t pos = linha.find(";");
+    disciplina.nome = linha.substr(0, pos);
+    disciplina.codigo = linha.substr(pos + 1);
+
+    disciplinas.push_back(disciplina);
+  }
+  inDisciplinas.close();
+
+  ifstream inNotas(arquivoNotas);
+  for (int i = 0; i < (int)alunos.size() && getline(inNotas, linha); i++)
+  {
+    size_t pos = 0;
+    for (int j = 0; j < (int)disciplinas.size(); j++)
+    {
+      size_t nextPos = linha.find(";", pos);
+      if (nextPos == string::npos)
+        nextPos = linha.size();
+
+      string strNota = linha.substr(pos, nextPos - pos);
+      try
+      {
+        notas[i][j] = stod(strNota);
+      }
+      catch (...)
+      {
+        notas[i][j] = 0;
+      }
+      pos = nextPos + 1;
+    }
+  }
+  inNotas.close();
+}
