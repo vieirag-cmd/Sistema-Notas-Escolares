@@ -203,3 +203,242 @@ void carregarDados(const string &arquivoAlunos, const string &arquivoDisciplinas
   }
   inNotas.close();
 }
+void lancarNotas(vector<Aluno> &alunos, vector<Disciplina> &disciplinas,
+                 double notas[][MAX_DISCIPLINAS], const string &arquivo)
+{
+  limparTela();
+  imprimirCentralizado("Lançamento de Notas");
+
+  string matricula = validarEntradaString("Matrícula do aluno: ");
+  int alunoIdx = -1;
+  for (int i = 0; i < (int)alunos.size(); i++)
+  {
+    if (alunos[i].matricula == matricula)
+    {
+      alunoIdx = i;
+      break;
+    }
+  }
+  if (alunoIdx == -1)
+  {
+    cout << "Aluno não encontrado!\n";
+    cout << "Pressione ENTER para continuar...";
+    cin.ignore();
+    return;
+  }
+
+  string codDisciplina = validarEntradaString("Código da disciplina: ");
+  int discIdx = -1;
+  for (int i = 0; i < (int)disciplinas.size(); i++)
+  {
+    if (disciplinas[i].codigo == codDisciplina)
+    {
+      discIdx = i;
+      break;
+    }
+  }
+  if (discIdx == -1)
+  {
+    cout << "Disciplina não encontrada!\n";
+    cout << "Pressione ENTER para continuar...";
+    cin.ignore();
+    return;
+  }
+
+  notas[alunoIdx][discIdx] = validarNota("Nota: ");
+
+  ofstream outFile(arquivo);
+  if (outFile.is_open())
+  {
+    for (int i = 0; i < (int)alunos.size(); i++)
+    {
+      for (int j = 0; j < (int)disciplinas.size(); j++)
+      {
+        outFile << fixed << setprecision(2) << notas[i][j];
+        if (j < (int)disciplinas.size() - 1)
+          outFile << ";";
+      }
+      outFile << "\n";
+    }
+    outFile.close();
+    cout << "\nNota lançada com sucesso!\n";
+  }
+  else
+  {
+    cout << "\nErro ao abrir arquivo " << arquivo << "\n";
+  }
+  cout << "Pressione ENTER para continuar...";
+  cin.ignore();
+}
+
+void calcularMedias(vector<Aluno> &alunos, vector<Disciplina> &disciplinas,
+                    double notas[][MAX_DISCIPLINAS], const string &arquivo)
+{
+  limparTela();
+  imprimirCentralizado("Relatório de Médias");
+
+  ofstream outFile(arquivo, ios::app);
+  if (!outFile.is_open())
+  {
+    cout << "Erro ao abrir arquivo " << arquivo << "\n";
+    cout << "Pressione ENTER para continuar...";
+    cin.ignore();
+    return;
+  }
+
+  for (int i = 0; i < (int)alunos.size(); i++)
+  {
+    double soma = 0;
+    int count = 0;
+    for (int j = 0; j < (int)disciplinas.size(); j++)
+    {
+      if (notas[i][j] > 0)
+      {
+        soma += notas[i][j];
+        count++;
+      }
+    }
+    double media = count > 0 ? soma / count : 0;
+    cout << "Aluno: " << alunos[i].nome << " - Média Geral: " << fixed << setprecision(2) << media << "\n";
+    outFile << "Aluno: " << alunos[i].nome << " - Média Geral: " << fixed << setprecision(2) << media << "\n";
+  }
+  outFile.close();
+
+  cout << "\nRelatório salvo no arquivo '" << arquivo << "'\n";
+  cout << "Pressione ENTER para continuar...";
+  cin.ignore();
+}
+
+void consultarNotasAluno(vector<Aluno> &alunos, vector<Disciplina> &disciplinas,
+                         double notas[][MAX_DISCIPLINAS])
+{
+  limparTela();
+  imprimirCentralizado("Consulta de Notas por Aluno");
+
+  string matricula = validarEntradaString("Matrícula do aluno: ");
+  int alunoIdx = -1;
+  for (int i = 0; i < (int)alunos.size(); i++)
+  {
+    if (alunos[i].matricula == matricula)
+    {
+      alunoIdx = i;
+      break;
+    }
+  }
+  if (alunoIdx == -1)
+  {
+    cout << "Aluno não encontrado!\n";
+    cout << "Pressione ENTER para continuar...";
+    cin.ignore();
+    return;
+  }
+
+  cout << "\nNotas do aluno " << alunos[alunoIdx].nome << ":\n";
+  for (int j = 0; j < (int)disciplinas.size(); j++)
+  {
+    cout << disciplinas[j].nome << ": " << fixed << setprecision(2) << notas[alunoIdx][j] << "\n";
+  }
+  cout << "Pressione ENTER para continuar...";
+  cin.ignore();
+}
+
+void consultarNotasDisciplina(vector<Aluno> &alunos, vector<Disciplina> &disciplinas,
+                              double notas[][MAX_DISCIPLINAS])
+{
+  limparTela();
+  imprimirCentralizado("Consulta de Notas por Disciplina");
+
+  string codDisciplina = validarEntradaString("Código da disciplina: ");
+  int discIdx = -1;
+  for (int i = 0; i < (int)disciplinas.size(); i++)
+  {
+    if (disciplinas[i].codigo == codDisciplina)
+    {
+      discIdx = i;
+      break;
+    }
+  }
+  if (discIdx == -1)
+  {
+    cout << "Disciplina não encontrada!\n";
+    cout << "Pressione ENTER para continuar...";
+    cin.ignore();
+    return;
+  }
+
+  cout << "\nNotas da disciplina " << disciplinas[discIdx].nome << ":\n";
+  for (int i = 0; i < (int)alunos.size(); i++)
+  {
+    cout << alunos[i].nome << ": " << fixed << setprecision(2) << notas[i][discIdx] << "\n";
+  }
+  cout << "Pressione ENTER para continuar...";
+  cin.ignore();
+}
+
+int main()
+{
+  vector<Aluno> alunos;
+  vector<Disciplina> disciplinas;
+  double notas[MAX_ALUNOS][MAX_DISCIPLINAS] = {0};
+
+  const string arquivoAlunos = "alunos.txt";
+  const string arquivoDisciplinas = "disciplinas.txt";
+  const string arquivoNotas = "notas.txt";
+  const string arquivoRelatorio = "relatorio.txt";
+
+  carregarDados(arquivoAlunos, arquivoDisciplinas, arquivoNotas, alunos, disciplinas, notas);
+
+  string opcoes[] = {
+      "1. Cadastrar Aluno",
+      "2. Cadastrar Disciplina",
+      "3. Lançar Notas",
+      "4. Calcular Médias",
+      "5. Consultar Notas de Aluno",
+      "6. Consultar Notas de Disciplina",
+      "7. Sair"};
+
+  int opcao;
+  do
+  {
+    limparTela();
+    imprimirCentralizado("MENU PRINCIPAL");
+    for (const auto &opc : opcoes)
+    {
+      imprimirCentralizado(opc);
+    }
+    cout << "\nEscolha uma opção: ";
+    cin >> opcao;
+    cin.ignore();
+
+    switch (opcao)
+    {
+    case 1:
+      cadastrarAluno(alunos, arquivoAlunos);
+      break;
+    case 2:
+      cadastrarDisciplina(disciplinas, arquivoDisciplinas);
+      break;
+    case 3:
+      lancarNotas(alunos, disciplinas, notas, arquivoNotas);
+      break;
+    case 4:
+      calcularMedias(alunos, disciplinas, notas, arquivoRelatorio);
+      break;
+    case 5:
+      consultarNotasAluno(alunos, disciplinas, notas);
+      break;
+    case 6:
+      consultarNotasDisciplina(alunos, disciplinas, notas);
+      break;
+    case 7:
+      cout << "\nSaindo...\n";
+      break;
+    default:
+      cout << "Opção inválida! Tente novamente.\n";
+      cout << "Pressione ENTER para continuar...";
+      cin.ignore();
+    }
+  } while (opcao != 7);
+
+  return 0;
+}
